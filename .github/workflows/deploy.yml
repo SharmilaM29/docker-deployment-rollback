@@ -23,10 +23,29 @@ jobs:
             -p 8080:80 \
             rollback-demo:v1
 
+      - name: Wait for container
+        run: |
+          echo "Waiting for container to start..."
+          sleep 5
+          docker ps -a
+          docker logs rollback-demo
+
       - name: Health check
         run: |
           for i in {1..5}; do
             echo "Health check attempt $i"
-            curl -f http://localhost:8080/health
+
+            if curl -f http://localhost:8080/health; then
+              echo "Health check passed"
+            else
+              echo "Health check failed"
+              docker ps -a
+              docker logs rollback-demo
+              exit 1
+            fi
+
             sleep 2
           done
+
+      - name: Deployment successful
+        run: echo "Deployment and health verification successful"
