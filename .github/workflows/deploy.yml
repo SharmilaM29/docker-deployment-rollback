@@ -1,0 +1,32 @@
+name: Docker Deployment Rollback
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t rollback-demo:v1 .
+
+      - name: Run container
+        run: |
+          docker run -d \
+            --name rollback-demo \
+            -p 8080:80 \
+            rollback-demo:v1
+
+      - name: Health check
+        run: |
+          for i in {1..5}; do
+            echo "Health check attempt $i"
+            curl -f http://localhost:8080/health
+            sleep 2
+          done
